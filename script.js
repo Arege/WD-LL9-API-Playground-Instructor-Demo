@@ -30,43 +30,90 @@ const languagesEl    = document.getElementById('languagesValue');
 /* ------------------------------------------------------------
    STEP 1: Connect the button's click event.
    ------------------------------------------------------------ */
-
+searchBtn.addEventListener('click', fetchCountry);
+countryInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    fetchCountry();
+  }
+});
 
 
 /* ------------------------------------------------------------
    STEP 2: Create fetchCountry()
    ------------------------------------------------------------ */
-
-
+async function fetchCountry() {
+  const name = countryInput.value.trim();
+  if (!name) return;
 
   /* ------------------------------------------------------------
      STEP 3: Show "Loading..."
      ------------------------------------------------------------ */
-
-
+  showLoading();
 
   /* ------------------------------------------------------------
      STEP 4: Build the fetch request
-     ------------------------------------------------------------
      Endpoint: https://restcountries.com/v3.1/name/{name}?fullText=true
      ------------------------------------------------------------ */
+  try {
+    let response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(name)}?fullText=true`);
+    if (!response.ok) {
+      // Fallback to fuzzy search if exact match isn't found
+      response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(name)}`);
+    }
 
+    if (!response.ok) {
+      throw new Error(`Country "${name}" not found. Chart another course.`);
+    }
 
+    /* ------------------------------------------------------------
+       STEP 5: Convert response -> JSON
+       ------------------------------------------------------------ */
+    const data = await response.json();
+    const country = data[0];
 
-  /* ------------------------------------------------------------
-     STEP 5: Convert response -> JSON
-     ------------------------------------------------------------ */
+    /* ------------------------------------------------------------
+       STEP 6: Display ONE property. Start simple.
+       Display only: Country Name. Then STOP.
 
+       Say to the class: "Everything else we build today follows
+       this exact pattern."
+       ------------------------------------------------------------ */
+    countryNameEl.textContent = country.name?.common || country.name?.official || name;
 
+    // Populate full field guide report card
+    if (flagImg) {
+      flagImg.src = country.flags?.svg || country.flags?.png || '';
+      flagImg.alt = country.flags?.alt || `Flag of ${country.name?.common || name}`;
+    }
 
-  /* ------------------------------------------------------------
-     STEP 6: Display ONE property. Start simple.
-     Display only: Country Name. Then STOP.
+    if (capitalEl) {
+      capitalEl.textContent = Array.isArray(country.capital) && country.capital.length > 0
+        ? country.capital.join(', ')
+        : (country.capital || '—');
+    }
 
-     Say to the class: "Everything else we build today follows
-     this exact pattern."
-     ------------------------------------------------------------ */
+    if (regionEl) {
+      regionEl.textContent = country.region || '—';
+    }
 
+    if (populationEl) {
+      populationEl.textContent = country.population ? country.population.toLocaleString() : '—';
+    }
+
+    if (languagesEl) {
+      languagesEl.textContent = country.languages
+        ? Object.values(country.languages).join(', ')
+        : '—';
+    }
+
+    hideLoading();
+    resultCard.classList.remove('hidden');
+  } catch (error) {
+    hideLoading();
+    errorEl.textContent = error.message || 'Unable to fetch dispatch report. Please try again.';
+    errorEl.classList.remove('hidden');
+  }
+}
 
 
 /* ------------------------------------------------------------
@@ -82,5 +129,3 @@ function showLoading() {
 function hideLoading() {
   loadingEl.classList.add('hidden');
 }
-
-

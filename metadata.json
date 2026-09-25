@@ -1,0 +1,8 @@
+{
+  "name": "Country Explorer",
+  "description": "Dispatch reports from anywhere on Earth using the REST Countries API.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
